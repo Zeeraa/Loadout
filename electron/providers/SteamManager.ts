@@ -193,7 +193,7 @@ export class SteamManager {
         this.runVisibleTerminalLinux(executablePath, innerCommand)
           .then(() => resolve())
           .catch(reject);
-        
+
         // Resolve immediately after spawning on Linux
         resolve();
       } else {
@@ -215,7 +215,7 @@ export class SteamManager {
     for (const term of terminalCommands) {
       try {
         execSync(`which ${term.cmd}`, { stdio: 'ignore' });
-        
+
         const formattedArgs = term.args(innerCommand).map(arg => {
           return `"${arg.replace(/"/g, '\\"')}"`;
         }).join(' ');
