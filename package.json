@@ -5,7 +5,7 @@
   "scripts": {
     "ng": "ng",
     "electron:compile": "tsc -p tsconfig.electron.json",
-    "start": "npm run electron:compile && concurrently --kill-others-on-fail \"ng serve\" \"tsc -p tsconfig.electron.json --watch --preserveWatchOutput\" \"wait-on http://localhost:4200 && while electron . ; do :; done\"",
+    "start": "npm run electron:compile && concurrently --kill-others-on-fail \"ng serve\" \"tsc -p tsconfig.electron.json --watch --preserveWatchOutput\" \"wait-on http://localhost:4200 && node electron-loop.js\"",
     "build": "ng build && npm run electron:compile",
     "package": "npm run build && electron-builder --win --linux",
     "watch": "ng build --watch --configuration development",
