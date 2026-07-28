@@ -1,0 +1,286 @@
+<div class="card border border-secondary shadow-sm">
+  <div class="card-header bg-dark d-flex justify-content-between align-items-center py-3">
+    <div class="d-flex align-items-center gap-2">
+      <i class="bi bi-controller text-primary"></i>
+      <h3 class="h6 mb-0 fw-bold">Managed Steam Games</h3>
+    </div>
+    <button class="btn btn-primary btn-xs px-2" (click)="openGameModal(gameTemplate)">
+      <i class="bi bi-plus-lg me-1"></i> Add Game
+    </button>
+  </div>
+  <div class="card-body p-0">
+    @if (configService.configuration().steam.games.length === 0) {
+      <div class="text-center py-4 text-white-50 small">
+        <i class="bi bi-folder-symlink d-block fs-3 mb-2 text-secondary"></i>
+        No Steam games added yet.
+      </div>
+    } @else {
+      <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle mb-0 text-sm">
+          <thead>
+            <tr>
+              <th scope="col" class="ps-3 border-secondary" style="width: 60px;">Active</th>
+              <th scope="col" class="border-secondary" style="width: 140px;">App ID</th>
+              <th scope="col" class="border-secondary">Game Name</th>
+              <th scope="col" class="border-secondary">Steam Account</th>
+              <th scope="col" class="text-center border-secondary" style="width: 90px;" title="Verify game files integrity when checking updates">Verify</th>
+              <th scope="col" class="border-secondary d-none d-md-table-cell">Custom Location</th>
+              <th scope="col" class="text-end pe-3 border-secondary" style="width: 100px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (game of configService.configuration().steam.games; track game.appId) {
+              <tr class="align-middle">
+                <td class="ps-3 border-secondary">
+                  <div class="form-check form-switch m-0">
+                    <input
+                      class="form-check-input pointer"
+                      type="checkbox"
+                      role="switch"
+                      [checked]="!game.disabled"
+                      (change)="toggleGameEnabled(game)"
+                    >
+                  </div>
+                </td>
+                <td class="border-secondary font-monospace fw-bold text-white-50">
+                  {{ game.appId }}
+                </td>
+                <td class="border-secondary">
+                  <div class="d-flex align-items-center gap-3">
+                    <img
+                      [src]="'https://cdn.akamai.steamstatic.com/steam/apps/' + game.appId + '/header.jpg'"
+                      class="rounded border border-secondary shadow-sm d-none d-sm-block"
+                      style="width: 100px; height: 47px; object-fit: cover; flex-shrink: 0;"
+                      alt=""
+                      onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'47\' viewBox=\'0 0 100 47\'><rect width=\'100%\' height=\'100%\' fill=\'%232d3035\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%236c757d\' font-size=\'9\' font-family=\'system-ui\'>Steam App</text></svg>';"
+                    >
+                    <span [class.text-decoration-line-through]="game.disabled" [class.text-white-50]="game.disabled" class="fw-semibold">
+                      {{ game.name }}
+                    </span>
+                  </div>
+                </td>
+                <td class="border-secondary">
+                  <span class="badge bg-secondary">
+                    <i class="bi bi-person-fill me-1"></i> {{ getAccountName(game.accountId) }}
+                  </span>
+                </td>
+                <td class="border-secondary text-center">
+                  <div class="form-check d-flex justify-content-center m-0">
+                    <input
+                      class="form-check-input pointer"
+                      type="checkbox"
+                      [checked]="game.validate"
+                      (change)="toggleGameVerify(game)"
+                    >
+                  </div>
+                </td>
+                <td class="border-secondary d-none d-md-table-cell text-truncate small text-white-50" style="max-width: 160px;" [title]="game.overrideInstallDir || 'Default folder'">
+                  @if (game.overrideInstallDir) {
+                    <i class="bi bi-folder-symlink-fill text-warning me-1"></i> {{ game.overrideInstallDir }}
+                  } @else {
+                    <span class="fst-italic text-muted">Use Global Path</span>
+                  }
+                </td>
+                <td class="text-end pe-3 border-secondary">
+                  <div class="btn-group">
+                    <button class="btn btn-outline-secondary btn-xs" (click)="openGameModal(gameTemplate, game)" title="Edit configuration">
+                      <i class="bi bi-pencil-fill text-warning"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary btn-xs" (click)="onDeleteGame(game)" title="Delete game">
+                      <i class="bi bi-trash-fill text-danger"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Add/Edit Game Modal -->
+<ng-template #gameTemplate let-modal>
+  <div class="modal-header bg-dark border-secondary">
+    <h5 class="modal-title text-white fw-bold d-flex align-items-center gap-2">
+      <i class="bi bi-controller text-primary"></i>
+      <span>{{ editingGame() ? 'Edit Steam Game Settings' : 'Add Steam Game' }}</span>
+    </h5>
+    <button type="button" class="btn-close btn-close-white" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body bg-dark text-white border-secondary">
+
+    <!-- Steam Cover Image Header (if fetched) -->
+    @if (headerImageSignal()) {
+      <div class="mb-3 position-relative overflow-hidden rounded border border-secondary shadow-sm">
+        <img
+          [src]="headerImageSignal()"
+          class="img-fluid"
+          style="width: 100%; max-height: 180px; object-fit: cover; filter: brightness(0.95);"
+          alt="Game Poster Header"
+        >
+        <div class="position-absolute bottom-0 start-0 w-100 p-2 bg-dark bg-opacity-75 small fw-bold">
+          <i class="bi bi-check-circle-fill text-success me-1"></i> Data validated with Steam Store database
+        </div>
+      </div>
+    }
+
+    <form (ngSubmit)="onSaveGame(modal)" #gameForm="ngForm">
+
+      <!-- App ID with Integrated Search Action -->
+      <div class="mb-3">
+        <label for="appIdInput" class="form-label text-white-50 small fw-bold">Steam App ID</label>
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-secondary border-secondary text-white-50">
+            <i class="bi bi-hash"></i>
+          </span>
+          <input
+            type="text"
+            class="form-control bg-dark border-secondary text-white"
+            id="appIdInput"
+            name="appId"
+            required
+            [ngModel]="appIdSignal()"
+            (ngModelChange)="appIdSignal.set($event)"
+            placeholder="e.g. 730, 2226430..."
+            autocomplete="off"
+            [disabled]="editingGame() !== null"
+          >
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            [disabled]="isLoadingDetails() || !appIdSignal().trim()"
+            (click)="searchGameDetails()"
+          >
+            @if (isLoadingDetails()) {
+              <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+              Searching...
+            } @else {
+              <i class="bi bi-search me-1"></i> Search API
+            }
+          </button>
+        </div>
+        <div class="form-text text-muted small">Enter ID and hit "Search API" to autofetch the verified cover image and title!</div>
+      </div>
+
+      <!-- Game Name Field -->
+      <div class="mb-3">
+        <label for="nameInput" class="form-label text-white-50 small fw-bold">Game Title</label>
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-secondary border-secondary text-white-50">
+            <i class="bi bi-tag-fill"></i>
+          </span>
+          <input
+            type="text"
+            class="form-control bg-dark border-secondary text-white"
+            id="nameInput"
+            name="name"
+            required
+            [ngModel]="nameSignal()"
+            (ngModelChange)="nameSignal.set($event)"
+            placeholder="Game title (e.g. Counter-Strike 2)"
+          >
+        </div>
+      </div>
+
+      <!-- Associated Account Dropdown -->
+      <div class="mb-3">
+        <label for="accountDropdown" class="form-label text-white-50 small fw-bold">Associated Login Account</label>
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-secondary border-secondary text-white-50">
+            <i class="bi bi-person-badge-fill"></i>
+          </span>
+          <select
+            class="form-select bg-dark border-secondary text-white"
+            id="accountDropdown"
+            name="accountId"
+            [ngModel]="accountIdSignal()"
+            (ngModelChange)="accountIdSignal.set($event)"
+          >
+            <option value="">-- None (No Login Required / Free Game) --</option>
+            @for (account of configService.configuration().steam.accounts; track account.uuid) {
+              <option [value]="account.uuid" [disabled]="account.disabled">
+                {{ account.username }} @if (account.disabled) { (Disabled) }
+              </option>
+            }
+          </select>
+        </div>
+        <div class="form-text text-muted small">Select the Steam Account required to download or update this game.</div>
+      </div>
+
+      <!-- Optional Target Location Override directory -->
+      <div class="mb-3">
+        <label for="overrideDirInput" class="form-label text-white-50 small fw-bold">Override Installation Folder <span class="badge bg-secondary font-monospace fw-normal text-white-50">Optional</span></label>
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-secondary border-secondary text-white-50">
+            <i class="bi bi-folder-fill"></i>
+          </span>
+          <input
+            type="text"
+            class="form-control bg-dark border-secondary text-white"
+            id="overrideDirInput"
+            name="overrideDir"
+            readonly
+            [value]="overrideDirSignal() || 'Use App-wide Default SteamApps folder'"
+            title="Custom path for this game only"
+          >
+          @if (overrideDirSignal()) {
+            <button class="btn btn-secondary border-secondary" type="button" (click)="overrideDirSignal.set('')" title="Clear override folder">
+              <i class="bi bi-x-circle text-danger"></i>
+            </button>
+          }
+          <button class="btn btn-secondary border-secondary" type="button" (click)="pickOverrideDir()">
+            <i class="bi bi-folder2-open"></i> Browse...
+          </button>
+        </div>
+        <div class="form-text text-muted small">Leave blank to inherit the global steamapps directory path.</div>
+      </div>
+
+      <!-- Toggles and Switches -->
+      <div class="row g-2 mb-2">
+        <div class="col-12 col-md-6">
+          <div class="form-check form-switch ps-5">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="gameActiveSwitch"
+              name="enabled"
+              [ngModel]="enabledSignal()"
+              (ngModelChange)="enabledSignal.set($event)"
+            >
+            <label class="form-check-label text-white-50 small ms-2 fw-semibold" for="gameActiveSwitch">
+              Game is Active
+            </label>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-check form-switch ps-5">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="gameVerifySwitch"
+              name="validate"
+              [ngModel]="validateSignal()"
+              (ngModelChange)="validateSignal.set($event)"
+            >
+            <label class="form-check-label text-white-50 small ms-2 fw-semibold" for="gameVerifySwitch">
+              Verify Files integrity
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Save and Cancel actions -->
+      <div class="modal-footer bg-dark border-secondary px-0 pb-0 mt-4 d-flex gap-2 justify-content-end">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="modal.dismiss()">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm px-4" [disabled]="!nameSignal().trim() || !appIdSignal().trim()">
+          <i class="bi bi-save me-1"></i> Save Game Config
+        </button>
+      </div>
+    </form>
+  </div>
+</ng-template>

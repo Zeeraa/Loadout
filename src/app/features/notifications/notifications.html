@@ -1,0 +1,175 @@
+<div class="row align-items-center mb-4">
+  <div class="col">
+    <div class="d-flex align-items-center gap-2 mb-1">
+      <a routerLink="/dashboard" class="btn btn-outline-secondary btn-sm me-2">
+        <i class="bi bi-arrow-left"></i> Back
+      </a>
+      <h1 class="h3 mb-0"><i class="bi bi-bell-fill text-warning me-2"></i>Notification Settings</h1>
+    </div>
+    <p class="text-white-50 ms-5 ps-3">Setup external webhooks to push download alerts, update completions, and center login logs down to third-party integrations.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Left Side: Discord Settings -->
+  <div class="col-12 col-lg-7">
+    <div class="card bg-dark border border-secondary shadow-sm mb-4">
+      <div class="card-header bg-dark border-secondary py-3 d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-discord text-info fs-4"></i>
+          <h2 class="h5 mb-0 fw-bold text-white">Discord Webhook Integration</h2>
+        </div>
+        <div class="form-check form-switch ps-5">
+          <input
+            class="form-check-input fs-5 pointer"
+            type="checkbox"
+            role="switch"
+            id="discordEnabledSwitch"
+            [ngModel]="configService.configuration().discord.enabled"
+            (ngModelChange)="toggleDiscordEnabled($event)"
+          >
+        </div>
+      </div>
+
+      <div class="card-body">
+        @if (configService.configuration().discord.enabled) {
+          <!-- Webhook URL Details -->
+          <div class="mb-4">
+            <label for="discordWebhookInput" class="form-label text-white-50 small fw-bold">Discord Webhook URL</label>
+            <div class="input-group">
+              <span class="input-group-text bg-secondary border-secondary text-white-50">
+                <i class="bi bi-link-45deg"></i>
+              </span>
+              <input
+                type="text"
+                class="form-control bg-dark border-secondary text-white"
+                id="discordWebhookInput"
+                placeholder="https://discord.com/api/webhooks/..."
+                [ngModel]="configService.configuration().discord.webhookUrl || ''"
+                (ngModelChange)="onWebhookUrlChange($event)"
+              >
+            </div>
+            <div class="form-text text-muted small">Input the unique URL created in your Discord Channel Integrations center. Changes are autosaved.</div>
+          </div>
+
+          <!-- Event Checklist -->
+          <div class="mb-2">
+            <label class="form-label text-white-50 small fw-bold mb-3 d-block">Subscribed Events</label>
+
+            <!-- Event 1: Notify Start -->
+            <div class="form-check form-switch ps-5 mb-3">
+              <input
+                class="form-check-input pointer"
+                type="checkbox"
+                role="switch"
+                id="notifyStartChk"
+                [checked]="isEventChecked(DiscordNotifyEvents.NotifyStart)"
+                (change)="toggleEvent(DiscordNotifyEvents.NotifyStart, $any($event.target).checked)"
+              >
+              <label class="form-check-label fw-semibold" for="notifyStartChk">
+                Update Loop Started
+                <span class="d-block text-muted small fw-normal">Triggers when the general system updater initialized downloading the games list.</span>
+              </label>
+            </div>
+
+            <!-- Event 2: Notify Finish -->
+            <div class="form-check form-switch ps-5 mb-3">
+              <input
+                class="form-check-input pointer"
+                type="checkbox"
+                role="switch"
+                id="notifyFinishChk"
+                [checked]="isEventChecked(DiscordNotifyEvents.NotifyFinish)"
+                (change)="toggleEvent(DiscordNotifyEvents.NotifyFinish, $any($event.target).checked)"
+              >
+              <label class="form-check-label fw-semibold" for="notifyFinishChk">
+                Update Loop Completed
+                <span class="d-block text-muted small fw-normal">Triggers and summarizes download yields when all scheduled updates complete.</span>
+              </label>
+            </div>
+
+            <!-- Event 3: Notify Game Update Start -->
+            <div class="form-check form-switch ps-5 mb-3">
+              <input
+                class="form-check-input pointer"
+                type="checkbox"
+                role="switch"
+                id="notifyGameStartChk"
+                [checked]="isEventChecked(DiscordNotifyEvents.NotifyGameUpdateStart)"
+                (change)="toggleEvent(DiscordNotifyEvents.NotifyGameUpdateStart, $any($event.target).checked)"
+              >
+              <label class="form-check-label fw-semibold" for="notifyGameStartChk">
+                Single Game Update Initialization
+                <span class="d-block text-muted small fw-normal">Triggers as soon as a single Steam App ID begins launching its updating sequence.</span>
+              </label>
+            </div>
+
+            <!-- Event 4: Notify Game Update Finish -->
+            <div class="form-check form-switch ps-5 mb-4">
+              <input
+                class="form-check-input pointer"
+                type="checkbox"
+                role="switch"
+                id="notifyGameFinishChk"
+                [checked]="isEventChecked(DiscordNotifyEvents.NotifyGameUpdateFinish)"
+                (change)="toggleEvent(DiscordNotifyEvents.NotifyGameUpdateFinish, $any($event.target).checked)"
+              >
+              <label class="form-check-label fw-semibold" for="notifyGameFinishChk">
+                Single Game Update Finished
+                <span class="d-block text-muted small fw-normal">Sends statistics, speeds, and success results when a game finishes installing or validating.</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Webhook Tester -->
+          <div class="border-top border-secondary pt-3 d-flex justify-content-end">
+            <button
+              type="button"
+              class="btn btn-outline-info btn-sm"
+              [disabled]="isTesting() || !configService.configuration().discord.webhookUrl?.trim()"
+              (click)="onTestNotification()"
+            >
+              @if (isTesting()) {
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                Sending Test Payload...
+              } @else {
+                <i class="bi bi-send me-1"></i> Trigger Test Notification
+              }
+            </button>
+          </div>
+        } @else {
+          <div class="text-center py-5 text-white-50">
+            <i class="bi bi-discord d-block fs-1 text-secondary mb-3"></i>
+            <h5>Discord Webhook is disabled</h5>
+            <p class="small text-muted mb-0">Toggle the active switch in the card header to configure hooks and channel push preferences.</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Info Panel -->
+  <div class="col-12 col-lg-5">
+    <div class="card bg-dark border border-secondary shadow-sm">
+      <div class="card-header bg-dark border-secondary py-3">
+        <h3 class="h6 mb-0 fw-bold text-white"><i class="bi bi-info-circle text-primary me-2"></i>Integration Guide</h3>
+      </div>
+      <div class="card-body text-white-50 small">
+        <p>You can push real-time summaries and update reports directly to your team's admin channels by linking a Discord Webhook.</p>
+
+        <h6 class="text-white small fw-bold mb-1">How to gather a Discord URL:</h6>
+        <ol class="ps-3 mb-4">
+          <li class="mb-1">Open Discord and head to your designated server settings page.</li>
+          <li class="mb-1">Navigate to the <strong>Integrations</strong> submenu and click <strong>Webhooks</strong>.</li>
+          <li class="mb-1">Create a new loader hook and assign it to your notification channel.</li>
+          <li class="mb-1">Click <strong>Copy Webhook URL</strong> and paste it directly into the input form!</li>
+        </ol>
+
+        <div class="alert alert-secondary border-secondary p-3 mb-0 small text-white">
+          <i class="bi bi-lightbulb-fill text-warning me-2"></i>
+          <span><strong>Pro-Tip:</strong> Disabling the master toggle blocks all background task notification pushes immediately without deleting your webhook URL!</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,6 +1,7 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, dialog, } from 'electron';
 import * as fs from 'fs';
 import { Loadout } from './Loadout';
+import { getPlatform, Platform } from './Utils';
 
 const isDev = !app.isPackaged;
 
@@ -19,6 +20,13 @@ if (isDev) {
 }
 
 app.whenReady().then(() => {
+  const platform = getPlatform();
+  if (platform === Platform.Unsupported) {
+    dialog.showErrorBox('Unsupported Platform', 'This application only supports Windows and Linux platforms.');
+    app.exit(1);
+    return;
+  }
+
   loadout = new Loadout();
 
   app.on('activate', () => {

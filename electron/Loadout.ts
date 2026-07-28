@@ -1,10 +1,16 @@
-import { app, BrowserWindow, ipcMain, Menu } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu } from 'electron';
 import * as path from 'path';
+import { SteamManager } from './providers/SteamManager';
+import { DiscordManager } from './notifications/DiscordManager';
+import { ConfigurationManager } from './config/ConfigurationManager';
 
 const isDev = !app.isPackaged;
 
 export class Loadout {
   public readonly window: BrowserWindow;
+  public readonly steamManager: SteamManager;
+  public readonly discordManager: DiscordManager;
+  public readonly configurationManager: ConfigurationManager;
 
   constructor() {
     Menu.setApplicationMenu(null);
@@ -19,6 +25,10 @@ export class Loadout {
       },
     });
 
+    this.steamManager = new SteamManager(this);
+    this.discordManager = new DiscordManager(this);
+    this.configurationManager = new ConfigurationManager(this);
+
     if (isDev) {
       this.window.loadURL('http://localhost:4200');
       this.window.webContents.openDevTools();
@@ -31,5 +41,11 @@ export class Loadout {
 
   private registerIpcHandlers(): void {
     ipcMain.handle('ping', () => 'pong');
+    ipcMain.handle('select-directory', async () => {
+      const result = await dialog.showOpenDialog(this.window, {
+        properties: ['openDirectory'],
+      });
+      return result.canceled ? null : result.filePaths[0];
+    });
   }
 }

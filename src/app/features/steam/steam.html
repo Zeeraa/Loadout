@@ -1,0 +1,80 @@
+<div class="row align-items-center mb-4">
+  <div class="col">
+    <div class="d-flex align-items-center gap-2 mb-1">
+      <a routerLink="/dashboard" class="btn btn-outline-secondary btn-sm me-2">
+        <i class="bi bi-arrow-left"></i> Back
+      </a>
+      <h1 class="h3 mb-0"><i class="bi bi-steam text-primary me-2"></i>Steam Settings</h1>
+    </div>
+    <p class="text-white-50 ms-5 ps-3">Configure active accounts, Steam command directories, and titles loaded for cafe clients.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- General Steam Configuration -->
+  <div class="col-12">
+    <div class="card bg-dark border border-secondary shadow-sm">
+      <div class="card-body py-3">
+        <div class="row align-items-center g-3">
+          <!-- Active Toggle -->
+          <div class="col-12 col-md-4 d-flex align-items-center">
+            <div class="form-check form-switch ps-5">
+              <input
+                class="form-check-input fs-5"
+                type="checkbox"
+                role="switch"
+                id="steamEnabledSwitch"
+                [ngModel]="configService.configuration().steam.enabled"
+                (ngModelChange)="toggleEnabled($event)"
+              >
+              <label class="form-check-label fw-bold ms-2" for="steamEnabledSwitch">
+                Enable Steam Integration
+              </label>
+            </div>
+          </div>
+
+          <!-- Directory Picker -->
+          <div class="col-12 col-md-8">
+            <label class="form-label text-white-50 small mb-1 fw-semibold d-block">Default steamapps Directory</label>
+            <div class="input-group">
+              <span class="input-group-text bg-secondary border-secondary text-white-50">
+                <i class="bi bi-folder-fill"></i>
+              </span>
+              <input
+                type="text"
+                class="form-control form-control-sm bg-dark text-white border-secondary"
+                readonly
+                [value]="configService.configuration().steam.defaultSteamAppsDir || 'No directory selected. Please select your global steamapps folder.'"
+              >
+              <button
+                class="btn btn-secondary btn-sm"
+                type="button"
+                (click)="onPickDirectory()"
+              >
+                <i class="bi bi-folder2-open me-1"></i> Browse...
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accounts & Games Row -->
+  @if (configService.configuration().steam.enabled) {
+    <div class="col-12 col-lg-5">
+      <app-account-list></app-account-list>
+    </div>
+    <div class="col-12 col-lg-7">
+      <app-game-list></app-game-list>
+    </div>
+  } @else {
+    <div class="col-12">
+      <div class="alert alert-secondary border border-secondary text-center py-5 shadow-sm">
+        <i class="bi bi-info-circle-fill text-info fs-1 mb-3 d-block"></i>
+        <h5>Steam Integration is Disabled</h5>
+        <p class="text-white-50 mb-0">Please toggle the switch above to manage accounts and setup automatic game updates.</p>
+      </div>
+    </div>
+  }
+</div>
