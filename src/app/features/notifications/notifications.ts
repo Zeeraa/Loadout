@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConfigurationService, DiscordNotifyEvents } from '../../core/services/configuration-service';
 import { ElectronService } from '../../core/services/electron.service';
+import { UpdateService } from '../../core/services/update.service';
 import { ToastService } from 'ngx-yet-another-toast-library';
 
 @Component({
@@ -14,6 +15,7 @@ import { ToastService } from 'ngx-yet-another-toast-library';
 })
 export class Notifications {
   protected readonly configService = inject(ConfigurationService);
+  protected readonly updateService = inject(UpdateService);
   private readonly electronService = inject(ElectronService);
   private readonly toastService = inject(ToastService);
 

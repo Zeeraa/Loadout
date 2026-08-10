@@ -11,62 +11,77 @@
 </div>
 
 <div class="row g-4">
+  @if (updateService.updateState().isUpdating) {
+    <div class="col-12 animate-fade">
+      <div class="alert alert-warning border border-warning d-flex align-items-center gap-2 shadow-sm mb-0 py-2">
+        <i class="bi bi-lock-fill fs-5"></i>
+        <span>Settings are locked because an update is currently in progress.</span>
+      </div>
+    </div>
+  }
+
   <!-- General Steam Configuration -->
   <div class="col-12">
-    <div class="card bg-dark border border-secondary shadow-sm">
-      <div class="card-body py-3">
-        <div class="row align-items-center g-3">
-          <!-- Active Toggle -->
-          <div class="col-12 col-md-4 d-flex align-items-center">
-            <div class="form-check form-switch ps-5">
-              <input
-                class="form-check-input fs-5"
-                type="checkbox"
-                role="switch"
-                id="steamEnabledSwitch"
-                [ngModel]="configService.configuration().steam.enabled"
-                (ngModelChange)="toggleEnabled($event)"
-              >
-              <label class="form-check-label fw-bold ms-2" for="steamEnabledSwitch">
-                Enable Steam Integration
-              </label>
+    <fieldset [disabled]="updateService.updateState().isUpdating">
+      <div class="card bg-dark border border-secondary shadow-sm">
+        <div class="card-body py-3">
+          <div class="row align-items-center g-3">
+            <!-- Active Toggle -->
+            <div class="col-12 col-md-4 d-flex align-items-center">
+              <div class="form-check form-switch ps-5">
+                <input
+                  class="form-check-input fs-5"
+                  type="checkbox"
+                  role="switch"
+                  id="steamEnabledSwitch"
+                  [ngModel]="configService.configuration().steam.enabled"
+                  (ngModelChange)="toggleEnabled($event)"
+                >
+                <label class="form-check-label fw-bold ms-2" for="steamEnabledSwitch">
+                  Enable Steam Integration
+                </label>
+              </div>
             </div>
-          </div>
 
-          <!-- Directory Picker -->
-          <div class="col-12 col-md-8">
-            <label class="form-label text-white-50 small mb-1 fw-semibold d-block">Default steamapps Directory</label>
-            <div class="input-group">
-              <span class="input-group-text bg-secondary border-secondary text-white-50">
-                <i class="bi bi-folder-fill"></i>
-              </span>
-              <input
-                type="text"
-                class="form-control form-control-sm bg-dark text-white border-secondary"
-                readonly
-                [value]="configService.configuration().steam.defaultSteamAppsDir || 'No directory selected. Please select your global steamapps folder.'"
-              >
-              <button
-                class="btn btn-secondary btn-sm"
-                type="button"
-                (click)="onPickDirectory()"
-              >
-                <i class="bi bi-folder2-open me-1"></i> Browse...
-              </button>
+            <!-- Directory Picker -->
+            <div class="col-12 col-md-8">
+              <label class="form-label text-white-50 small mb-1 fw-semibold d-block">Default steamapps Directory</label>
+              <div class="input-group">
+                <span class="input-group-text bg-secondary border-secondary text-white-50">
+                  <i class="bi bi-folder-fill"></i>
+                </span>
+                <input
+                  type="text"
+                  class="form-control form-control-sm bg-dark text-white border-secondary"
+                  readonly
+                  [value]="configService.configuration().steam.defaultSteamAppsDir || 'No directory selected. Please select your global steamapps folder.'"
+                >
+                <button
+                  class="btn btn-secondary btn-sm"
+                  type="button"
+                  (click)="onPickDirectory()"
+                >
+                  <i class="bi bi-folder2-open me-1"></i> Browse...
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </fieldset>
   </div>
 
   <!-- Accounts & Games Row -->
   @if (configService.configuration().steam.enabled) {
     <div class="col-12 col-lg-5">
-      <app-account-list></app-account-list>
+      <fieldset [disabled]="updateService.updateState().isUpdating">
+        <app-account-list></app-account-list>
+      </fieldset>
     </div>
     <div class="col-12 col-lg-7">
-      <app-game-list></app-game-list>
+      <fieldset [disabled]="updateService.updateState().isUpdating">
+        <app-game-list></app-game-list>
+      </fieldset>
     </div>
   } @else {
     <div class="col-12">

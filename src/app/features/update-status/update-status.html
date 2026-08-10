@@ -1,0 +1,120 @@
+<div class="d-flex flex-column bg-dark text-white p-3 h-100 w-100 overflow-hidden m-0">
+  <!-- Header / Navigation info (Self-contained window) -->
+  <div class="flex-shrink-0 d-flex justify-content-between align-items-center mb-2 border-bottom border-secondary pb-2">
+    <div class="d-flex align-items-center gap-2">
+      <i class="bi bi-arrow-repeat text-warning fs-4 spin"></i>
+      <h1 class="h5 mb-0 fw-bold">Loadout Game Updates</h1>
+    </div>
+    @if (!updateService.updateState().isUpdating) {
+      <button class="btn btn-outline-light btn-sm" (click)="onClose()">
+        <i class="bi bi-x-lg me-1"></i> Close Window
+      </button>
+    }
+  </div>
+
+  <!-- Main Grid Content: Single shared scrollbar for all layout items EXCEPT the header and footer -->
+  <div class="flex-grow-1 flex-shrink-1 overflow-y-auto overflow-x-hidden d-flex flex-column gap-3 pe-1">
+    <!-- Current Game Meta Box -->
+    <div class="card bg-black border border-secondary p-3 shadow-sm rounded flex-shrink-0">
+      <div class="row g-3">
+        <!-- Game Banner (if Steam) -->
+        <div class="col-12 col-md-4 d-flex align-items-center justify-content-center">
+          @if (getHeaderUrl()) {
+            <img [src]="getHeaderUrl()" alt="Game Banner" class="img-fluid rounded border border-secondary shadow-sm" style="max-height: 120px; object-fit: cover; width: 100%;">
+          } @else {
+            <div class="bg-dark text-muted d-flex align-items-center justify-content-center border border-secondary rounded w-100 py-4" style="height: 100px;">
+              <i class="bi bi-image fs-1 text-secondary"></i>
+            </div>
+          }
+        </div>
+
+        <!-- Updating Status Metainfo -->
+        <div class="col-12 col-md-8 d-flex flex-column justify-content-center">
+          <div class="text-white-50 small uppercase fw-bold mb-1">
+            @if (updateService.updateState().isUpdating) {
+              <span class="text-warning">
+                <i class="bi bi-dot-fill fs-5 align-middle"></i>
+                Updating ({{ updateService.updateState().currentIndex }} / {{ updateService.updateState().totalGames }})
+              </span>
+            } @else {
+              <span class="text-success">
+                <i class="bi bi-check-circle-fill me-1"></i>
+                Update Process Complete
+              </span>
+            }
+          </div>
+
+          <h2 class="h4 mb-2 fw-bold text-white text-truncate">
+            {{ updateService.updateState().currentGame ? updateService.updateState().currentGame!.name : 'No game currently updating' }}
+          </h2>
+
+          <div class="small text-white-50 text-truncate" *ngIf="updateService.updateState().currentGame">
+            Provider: <strong>{{ updateService.updateState().currentGame!.provider }}</strong>
+            • Platform App ID: <code>{{ updateService.updateState().currentGame!.appId }}</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="flex-shrink-0">
+      <div class="d-flex justify-content-between mb-1 small text-white-50">
+        <span>Overall Progress</span>
+        <span>{{ getProgressPercent() }}%</span>
+      </div>
+      <div class="progress bg-black border border-secondary rounded" style="height: 14px;">
+        <div
+          class="progress-bar progress-bar-striped progress-bar-animated bg-warning"
+          role="progressbar"
+          [style.width.%]="getProgressPercent()"
+          [attr.aria-valuenow]="getProgressPercent()"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        ></div>
+      </div>
+    </div>
+
+    <!-- Live Log Console -->
+    <div class="d-flex flex-column flex-grow-1 min-vh-0" style="min-height: 250px;">
+      <label class="form-label text-white-50 small mb-1 fw-semibold">Live SteamCMD Console stdout/stderr Output</label>
+      <div
+        #logWindow
+        class="bg-black border border-secondary rounded p-3 font-monospace small flex-grow-1 overflow-auto"
+        style="font-size: 11px; white-space: pre-wrap; line-height: 1.4;"
+      >
+        <div *ngFor="let log of updateService.updateState().logs" [ngClass]="getLogClass(log)">{{ log }}</div>
+        <div *ngIf="updateService.updateState().logs.length === 0" class="text-muted italic">Console terminal outputs will stream here during operation...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom action bar (sticky fixed at footer position, never scrolls) -->
+  <div class="border-top border-secondary pt-3 mt-2 d-flex justify-content-between align-items-center flex-shrink-0">
+    <div>
+      <span *ngIf="updateService.updateState().isCancelled" class="text-danger small fw-bold">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i> Process interrupted or cancelled.
+      </span>
+    </div>
+    <div class="d-flex gap-2">
+      @if (updateService.updateState().isUpdating) {
+        <button
+          class="btn btn-warning btn-sm px-3"
+          [disabled]="updateService.updateState().isCancelled"
+          (click)="onCancel()"
+        >
+          <i class="bi bi-x-octagon-fill me-1"></i> Cancel Process (Soft)
+        </button>
+        <button
+          class="btn btn-danger btn-sm px-3"
+          (click)="onForceKill()"
+        >
+          <i class="bi bi-slash-circle-fill me-1"></i> Force Kill Process (Hard)
+        </button>
+      } @else {
+        <button class="btn btn-secondary btn-sm px-4" (click)="onClose()">
+          <i class="bi bi-x-circle me-1"></i> Close
+        </button>
+      }
+    </div>
+  </div>
+</div>

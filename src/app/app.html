@@ -1,34 +1,36 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
-  <div class="container-fluid">
-    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" routerLink="/dashboard">
-      <i class="bi bi-box-seam-fill text-warning"></i>
-      <span>Loadout</span>
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-            <i class="bi bi-speedometer2 me-1"></i> Dashboard
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/steam" routerLinkActive="active">
-            <i class="bi bi-steam text-primary me-1"></i> Steam Settings
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/notifications" routerLinkActive="active">
-            <i class="bi bi-bell-fill text-warning me-1"></i> Notifications
-          </a>
-        </li>
-      </ul>
+@if (!isUpdateStatusPage()) {
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" routerLink="/dashboard">
+        <i class="bi bi-box-seam-fill text-warning"></i>
+        <span>Loadout</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+              <i class="bi bi-speedometer2 me-1"></i> Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/steam" routerLinkActive="active">
+              <i class="bi bi-steam text-primary me-1"></i> Steam Settings
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/notifications" routerLinkActive="active">
+              <i class="bi bi-bell-fill text-warning me-1"></i> Notifications
+            </a>
+          </li>
+        </ul>
+      </div>
     </div>
-  </div>
-</nav>
+  </nav>
+}
 
-<main class="container-fluid py-3">
+<main [class.container-fluid]="!isUpdateStatusPage()" [class.py-3]="!isUpdateStatusPage()" [class.h-100]="isUpdateStatusPage()">
   <router-outlet></router-outlet>
 </main>

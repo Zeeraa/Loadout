@@ -32,6 +32,7 @@ export interface Configuration {
   steam: SteamConfig;
   mode: Mode;
   afterUpdateAction: AfterUpdateAction;
+  keepUpdateUiOpen: boolean;
 }
 
 export enum Mode {
@@ -89,6 +90,7 @@ export function blankConfiguration(): Configuration {
     },
     mode: Mode.Manual,
     afterUpdateAction: AfterUpdateAction.None,
+    keepUpdateUiOpen: true,
   };
 }
 

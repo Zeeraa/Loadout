@@ -3,6 +3,7 @@ import * as path from 'path';
 import { SteamManager } from './providers/SteamManager';
 import { DiscordManager } from './notifications/DiscordManager';
 import { ConfigurationManager } from './config/ConfigurationManager';
+import { UpdateManager } from './UpdateManager';
 
 const isDev = !app.isPackaged;
 
@@ -11,6 +12,7 @@ export class Loadout {
   public readonly steamManager: SteamManager;
   public readonly discordManager: DiscordManager;
   public readonly configurationManager: ConfigurationManager;
+  public readonly updateManager: UpdateManager;
 
   constructor() {
     Menu.setApplicationMenu(null);
@@ -28,6 +30,7 @@ export class Loadout {
     this.steamManager = new SteamManager(this);
     this.discordManager = new DiscordManager(this);
     this.configurationManager = new ConfigurationManager(this);
+    this.updateManager = new UpdateManager(this);
 
     if (isDev) {
       this.window.loadURL('http://localhost:4200');
@@ -35,6 +38,10 @@ export class Loadout {
     } else {
       this.window.loadFile(path.join(__dirname, '..', 'angular', 'browser', 'index.html'));
     }
+
+    this.window.on('closed', () => {
+      app.exit(0);
+    });
 
     this.registerIpcHandlers();
   }

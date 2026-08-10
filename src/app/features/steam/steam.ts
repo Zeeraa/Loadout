@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ConfigurationService } from '../../core/services/configuration-service';
 import { ElectronService } from '../../core/services/electron.service';
+import { UpdateService } from '../../core/services/update.service';
 import { ToastService } from 'ngx-yet-another-toast-library';
 import { AccountList } from './account-list/account-list';
 import { GameList } from './game-list/game-list';
@@ -15,6 +16,7 @@ import { GameList } from './game-list/game-list';
 })
 export class Steam {
   protected readonly configService = inject(ConfigurationService);
+  protected readonly updateService = inject(UpdateService);
   private readonly electronService = inject(ElectronService);
   private readonly toastService = inject(ToastService);
 

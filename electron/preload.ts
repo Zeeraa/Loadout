@@ -11,4 +11,16 @@ contextBridge.exposeInMainWorld('api', {
   saveConfig: (config: Configuration) => ipcRenderer.invoke('save-config', config),
   testDiscordNotification: () => ipcRenderer.invoke('discord-test-notification'),
   testSteamLogin: () => ipcRenderer.invoke('test-steam-login'),
+  startFullUpdate: () => ipcRenderer.invoke('start-full-update'),
+  cancelUpdate: () => ipcRenderer.invoke('cancel-update'),
+  forceKillUpdate: () => ipcRenderer.invoke('force-kill-update'),
+  getUpdateState: () => ipcRenderer.invoke('get-update-state'),
+  closeUpdateWindow: () => ipcRenderer.invoke('close-update-window'),
+  onUpdateStateChanged: (callback: (state: any) => void) => {
+    const listener = (_event: any, state: any) => callback(state);
+    ipcRenderer.on('update-state-changed', listener);
+    return () => {
+      ipcRenderer.removeListener('update-state-changed', listener);
+    };
+  }
 });

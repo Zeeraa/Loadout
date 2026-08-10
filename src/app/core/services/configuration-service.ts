@@ -31,6 +31,7 @@ export class ConfigurationService {
           },
           mode: config?.mode || Mode.Manual,
           afterUpdateAction: config?.afterUpdateAction || AfterUpdateAction.None,
+          keepUpdateUiOpen: config?.keepUpdateUiOpen !== false,
         };
         this.configuration.set(merged);
       } else {
@@ -60,6 +61,7 @@ export interface Configuration {
   steam: SteamConfig;
   mode: Mode;
   afterUpdateAction: AfterUpdateAction;
+  keepUpdateUiOpen: boolean;
 }
 
 export enum Mode {
@@ -125,5 +127,6 @@ export function blankConfiguration(): Configuration {
     },
     mode: Mode.Manual,
     afterUpdateAction: AfterUpdateAction.None,
+    keepUpdateUiOpen: true,
   }
 }

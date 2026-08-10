@@ -1,0 +1,38 @@
+/* Custom styles for update-status */
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.spin {
+  animation: rotation 2s infinite linear;
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+}
+
+.log-error {
+  color: #ff4d4d;
+  font-weight: 500;
+}
+
+.log-success {
+  color: #2ed573;
+  font-weight: 500;
+}
+
+.log-steam {
+  color: #888888; /* Slightly darker / grey color */
+}
+
+.log-info {
+  color: #e2e8f0; /* Generic info color (cool gray/light white) */
+}

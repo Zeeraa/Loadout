@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { ConfigurationService } from './core/services/configuration-service';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
@@ -11,9 +11,14 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 })
 export class App implements OnInit {
   private readonly configService = inject(ConfigurationService);
+  protected readonly router = inject(Router);
   protected readonly title = signal('loadout');
 
   ngOnInit(): void {
     this.configService.loadConfiguration();
+  }
+
+  protected isUpdateStatusPage(): boolean {
+    return this.router.url.includes('/update-status');
   }
 }

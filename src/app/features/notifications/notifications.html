@@ -11,8 +11,20 @@
 </div>
 
 <div class="row g-4">
-  <!-- Left Side: Discord Settings -->
-  <div class="col-12 col-lg-7">
+  @if (updateService.updateState().isUpdating) {
+    <div class="col-12 animate-fade">
+      <div class="alert alert-warning border border-warning d-flex align-items-center gap-2 shadow-sm mb-0 py-2">
+        <i class="bi bi-lock-fill fs-5"></i>
+        <span>Settings are locked because an update is currently in progress.</span>
+      </div>
+    </div>
+  }
+
+  <div class="col-12">
+    <fieldset [disabled]="updateService.updateState().isUpdating" class="border-0 p-0 m-0">
+      <div class="row g-4">
+        <!-- Left Side: Discord Settings -->
+        <div class="col-12 col-lg-7">
     <div class="card bg-dark border border-secondary shadow-sm mb-4">
       <div class="card-header bg-dark border-secondary py-3 d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center gap-2">
@@ -164,12 +176,10 @@
           <li class="mb-1">Create a new loader hook and assign it to your notification channel.</li>
           <li class="mb-1">Click <strong>Copy Webhook URL</strong> and paste it directly into the input form!</li>
         </ol>
-
-        <div class="alert alert-secondary border-secondary p-3 mb-0 small text-white">
-          <i class="bi bi-lightbulb-fill text-warning me-2"></i>
-          <span><strong>Pro-Tip:</strong> Disabling the master toggle blocks all background task notification pushes immediately without deleting your webhook URL!</span>
-        </div>
       </div>
     </div>
   </div>
+</div>
+</fieldset>
+</div>
 </div>

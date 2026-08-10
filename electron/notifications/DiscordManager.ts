@@ -63,25 +63,25 @@ export class DiscordManager {
     }
   }
 
-  public async sendUpdateStartNofication() {
+  public async sendUpdateStartNofication(totalGames: number) {
     return this.sendNotification(
       DiscordNotifyEvents.NotifyStart,
-      'Update Loop Started',
-      'The Loadout update service has initiated the scheduled game checking sequence.',
-      [
-        { name: 'Service State', value: 'Active', inline: true }
-      ],
+      'Update started',
+      `Checking and updating **${totalGames}** game${totalGames === 1 ? '' : 's'} on the schedule.`,
+      [],
       3447003 // Dark Blue (0x3498DB)
     );
   }
 
-  public async sendUpdateFinishNofication() {
+  public async sendUpdateFinishNofication(totalGames: number, successCount: number, failCount: number) {
     return this.sendNotification(
       DiscordNotifyEvents.NotifyFinish,
-      'Update Loop Completed',
-      'The scheduled update checklist has successfully run and validated all platform caches.',
+      'Update completed',
+      `All automated checkups finished.`,
       [
-        { name: 'Service State', value: 'Idle / Sleeping', inline: true }
+        { name: 'Total Games', value: String(totalGames), inline: true },
+        { name: 'Successful', value: String(successCount), inline: true },
+        { name: 'Failed', value: String(failCount), inline: true }
       ],
       2067276 // Dark Green (0x1F8B4C)
     );
@@ -113,6 +113,22 @@ export class DiscordManager {
         { name: 'Application ID', value: String(appId), inline: true }
       ],
       3066993, // Green/Teal (0x2ECC71)
+      headerUrl
+    );
+  }
+
+  public async sendSteamGameUpdateFailedNotification(appId: string | number, gameName: string, errorReason: string) {
+    const headerUrl = `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/header.jpg`;
+    return this.sendNotification(
+      DiscordNotifyEvents.NotifyGameUpdateFinish,
+      'Steam Game Update Failed',
+      `Failed to complete checking and fetching updates for **${gameName}** (App ID: ${appId}).`,
+      [
+        { name: 'Game Title', value: gameName, inline: true },
+        { name: 'Application ID', value: String(appId), inline: true },
+        { name: 'Error Reason', value: errorReason, inline: false }
+      ],
+      15158332, // Red (0xE74C3C)
       headerUrl
     );
   }
