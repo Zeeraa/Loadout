@@ -27,7 +27,7 @@ export class Steam {
     await this.configService.saveConfiguration();
     this.toastService.success(
       `Steam integration has been ${enabled ? 'enabled' : 'disabled'}.`,
-      'Config Updated'
+      'Config Updated',
     );
   }
 
@@ -41,7 +41,7 @@ export class Steam {
         await this.configService.saveConfiguration();
         this.toastService.success(
           `SteamApps directory set to: ${selected}`,
-          'Directory Selected'
+          'Directory Selected',
         );
       }
     } catch (e) {

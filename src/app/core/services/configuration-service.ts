@@ -3,7 +3,7 @@ import { ElectronService } from "./electron.service";
 import { firstValueFrom } from "rxjs";
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ConfigurationService {
   private readonly electronService = inject(ElectronService);
@@ -32,6 +32,7 @@ export class ConfigurationService {
           mode: config?.mode || Mode.Manual,
           afterUpdateAction: config?.afterUpdateAction || AfterUpdateAction.None,
           keepUpdateUiOpen: config?.keepUpdateUiOpen !== false,
+          scheduledTime: config?.scheduledTime || '03:00',
         };
         this.configuration.set(merged);
       } else {
@@ -62,6 +63,8 @@ export interface Configuration {
   mode: Mode;
   afterUpdateAction: AfterUpdateAction;
   keepUpdateUiOpen: boolean;
+  /** Time of day (HH:mm, 24h) the update should run when mode is Scheduled */
+  scheduledTime: string;
 }
 
 export enum Mode {
@@ -74,6 +77,7 @@ export enum AfterUpdateAction {
   None = 'none',
   Exit = 'exit',
   Reboot = 'reboot',
+  Shutdown = 'shutdown',
 }
 
 export interface DiscordConfig {
@@ -123,10 +127,11 @@ export function blankConfiguration(): Configuration {
       enabled: false,
       accounts: [],
       games: [],
-      defaultSteamAppsDir: ''
+      defaultSteamAppsDir: '',
     },
     mode: Mode.Manual,
     afterUpdateAction: AfterUpdateAction.None,
     keepUpdateUiOpen: true,
+    scheduledTime: '03:00',
   }
 }

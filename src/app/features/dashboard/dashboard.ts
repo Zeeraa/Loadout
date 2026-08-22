@@ -19,9 +19,9 @@ export class Dashboard {
 
   protected onStartFullUpdate(): void {
     const config = this.configService.configuration();
-    const hasEnabledGames = config.steam.enabled && config.steam.games.some(g => !g.disabled);
+    const hasEnabledSteamGames = config.steam.enabled && config.steam.games.some(g => !g.disabled);
 
-    if (!hasEnabledGames) {
+    if (!hasEnabledSteamGames) {
       this.toastService.warning('No active/enabled games found to update. Please configure Steam integrated games first.', 'Update Terminated');
       return;
     }
@@ -37,7 +37,7 @@ export class Dashboard {
     await this.configService.saveConfiguration();
     this.toastService.success(
       `Update popup persistence ${doneValue ? 'enabled (will stay open)' : 'disabled (will auto-close)'}.`,
-      'Config Saved'
+      'Config Saved',
     );
   }
 }

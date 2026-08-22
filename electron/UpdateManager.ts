@@ -1,7 +1,8 @@
 import { BrowserWindow, ipcMain, app } from 'electron';
 import * as path from 'path';
+import { exec } from 'child_process';
 import { Loadout } from './Loadout';
-import { SteamGame } from './config/ConfigurationManager';
+import { AfterUpdateAction, Mode, SteamGame } from './config/ConfigurationManager';
 
 const isDev = !app.isPackaged;
 
@@ -16,6 +17,9 @@ export interface UpdateState {
   } | null;
   logs: string[];
   isCancelled: boolean;
+  /** Set while counting down to an Exit/Shutdown that will happen after the update finished */
+  pendingPostUpdateAction: 'exit' | 'shutdown' | null;
+  pendingPostUpdateSecondsRemaining: number;
 }
 
 export class UpdateManager {
@@ -29,11 +33,43 @@ export class UpdateManager {
     currentGame: null,
     logs: [],
     isCancelled: false,
+    pendingPostUpdateAction: null,
+    pendingPostUpdateSecondsRemaining: 0,
   };
+
+  // Tracks the calendar day (YYYY-MM-DD) a scheduled update last ran on, so it only fires once per day
+  private lastScheduledRunDate: string | null = null;
+  private postUpdateActionTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(loadout: Loadout) {
     this.loadout = loadout;
     this.registerIpcHandlers();
+    this.startScheduleWatcher();
+  }
+
+  /** Polls once a minute for a matching Scheduled-mode time so daily updates run in the background. */
+  private startScheduleWatcher(): void {
+    setInterval(() => this.checkSchedule(), 60_000);
+  }
+
+  private checkSchedule(): void {
+    const config = this.loadout.configurationManager.getConfig();
+    if (config.mode !== Mode.Scheduled || !config.scheduledTime || this.state.isUpdating) {
+      return;
+    }
+
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+    if (this.lastScheduledRunDate === today) {
+      return;
+    }
+
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    if (currentTime === config.scheduledTime) {
+      this.lastScheduledRunDate = today;
+      console.log(`Scheduled update time (${config.scheduledTime}) reached, starting full update.`);
+      this.startFullUpdate();
+    }
   }
 
   private registerIpcHandlers(): void {
@@ -60,6 +96,11 @@ export class UpdateManager {
       if (this.updateWindow) {
         this.updateWindow.close();
       }
+      return true;
+    });
+
+    ipcMain.handle('cancel-post-update-action', async () => {
+      this.cancelPendingPostUpdateAction();
       return true;
     });
   }
@@ -115,21 +156,35 @@ export class UpdateManager {
 
     this.updateWindow.setMenu(null);
 
-    // Prevent closing the update status window while updates are actively running
+    // Prevent closing the update status window while updates are actively running or a post-update action is pending
     this.updateWindow.on('close', (e) => {
       if (this.state.isUpdating) {
         e.preventDefault();
         this.addLog('[System] Prevented close of the status panel! Updates are currently active. Please use "Cancel Process" or "Force Kill" to safely terminate first.');
+      } else if (this.state.pendingPostUpdateAction) {
+        e.preventDefault();
+        this.addLog('[System] Prevented close of the status panel! Use the "Cancel" button to stop the pending post-update action first.');
       }
     });
 
     if (isDev) {
       this.updateWindow.loadURL('http://localhost:4200/#/update-status');
-      this.updateWindow.webContents.openDevTools();
     } else {
       const filePath = path.join(__dirname, '..', 'angular', 'browser', 'index.html');
       this.updateWindow.loadFile(filePath, { hash: '/update-status' });
     }
+
+    // Allow pressing F12 to toggle developer tools instead of always showing them
+    this.updateWindow.webContents.on('before-input-event', (event, input) => {
+      if (input.type === 'keyDown' && input.key === 'F12' && this.updateWindow) {
+        if (this.updateWindow.webContents.isDevToolsOpened()) {
+          this.updateWindow.webContents.closeDevTools();
+        } else {
+          this.updateWindow.webContents.openDevTools();
+        }
+        event.preventDefault();
+      }
+    });
 
     this.updateWindow.on('closed', () => {
       this.updateWindow = null;
@@ -167,6 +222,8 @@ export class UpdateManager {
       currentGame: null,
       logs: [],
       isCancelled: false,
+      pendingPostUpdateAction: null,
+      pendingPostUpdateSecondsRemaining: 0,
     };
 
     // Open popup window to show status
@@ -232,20 +289,70 @@ export class UpdateManager {
       await this.loadout.discordManager.sendUpdateFinishNofication(
         this.state.totalGames,
         successCount,
-        failCount
+        failCount,
       );
     } catch (e) {
       console.error('Failed to dispatch update-finish Discord notification', e);
     }
 
-    // If configured to close the window automatically when done, do so.
-    if (!config.keepUpdateUiOpen && this.updateWindow && !this.updateWindow.isDestroyed()) {
+    // If configured to close/shut down after the update, count down (with a cancel option) instead of acting instantly.
+    if (config.afterUpdateAction === AfterUpdateAction.Exit) {
+      this.schedulePostUpdateAction('exit');
+    } else if (config.afterUpdateAction === AfterUpdateAction.Shutdown) {
+      this.schedulePostUpdateAction('shutdown');
+    } else if (!config.keepUpdateUiOpen && this.updateWindow && !this.updateWindow.isDestroyed()) {
+      // If configured to close the window automatically when done, do so.
       // Delay slightly so user has a chance to notice it finished
       setTimeout(() => {
         if (this.updateWindow && !this.updateWindow.isDestroyed()) {
           this.updateWindow.close();
         }
       }, 3000);
+    }
+  }
+
+  /** Counts down 10s (broadcasting each tick so the UI can show a Cancel button) before exiting or shutting down. */
+  private schedulePostUpdateAction(action: 'exit' | 'shutdown'): void {
+    this.addLog(`[System] Configured to ${action === 'exit' ? 'close the application' : 'shut down the system'} after update completion. Starting 10 second countdown...`);
+
+    this.state.pendingPostUpdateAction = action;
+    this.state.pendingPostUpdateSecondsRemaining = 10;
+    this.broadcastStateChange();
+
+    this.postUpdateActionTimer = setInterval(() => {
+      const remaining = this.state.pendingPostUpdateSecondsRemaining - 1;
+
+      if (remaining <= 0) {
+        this.clearPostUpdateActionTimer();
+        this.state.pendingPostUpdateAction = null;
+        this.state.pendingPostUpdateSecondsRemaining = 0;
+        this.broadcastStateChange();
+
+        if (action === 'exit') {
+          app.exit(0);
+        } else {
+          this.shutdownSystem();
+        }
+      } else {
+        this.state.pendingPostUpdateSecondsRemaining = remaining;
+        this.broadcastStateChange();
+      }
+    }, 1000);
+  }
+
+  public cancelPendingPostUpdateAction(): void {
+    if (!this.state.pendingPostUpdateAction) return;
+    this.addLog(`[System] Post-update ${this.state.pendingPostUpdateAction} cancelled by user.`);
+    this.clearPostUpdateActionTimer();
+    this.state.pendingPostUpdateAction = null;
+    this.state.pendingPostUpdateSecondsRemaining = 0;
+    this.broadcastStateChange();
+  }
+
+  private clearPostUpdateActionTimer(): void {
+    if (this.postUpdateActionTimer) {
+      clearInterval(this.postUpdateActionTimer);
+      this.postUpdateActionTimer = null;
     }
   }
 
@@ -266,5 +373,15 @@ export class UpdateManager {
     } else {
       this.addLog('[System] No active process was registered as running, or termination query returned false.');
     }
+  }
+
+  private shutdownSystem(): void {
+    const command = process.platform === 'win32' ? 'shutdown /s /t 0' : 'shutdown -h now';
+    exec(command, (error) => {
+      if (error) {
+        console.error('Failed to execute system shutdown command:', error);
+        this.addLog(`[System] Failed to shut down the system: ${String(error)}`);
+      }
+    });
   }
 }

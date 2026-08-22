@@ -2,7 +2,7 @@ import { Injectable, inject, signal, OnDestroy } from "@angular/core";
 import { ElectronService, UpdateState } from "./electron.service";
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class UpdateService implements OnDestroy {
   private readonly electronService = inject(ElectronService);
@@ -14,6 +14,8 @@ export class UpdateService implements OnDestroy {
     currentGame: null,
     logs: [],
     isCancelled: false,
+    pendingPostUpdateAction: null,
+    pendingPostUpdateSecondsRemaining: 0,
   });
 
   private removeListener: (() => void) | null = null;
@@ -30,7 +32,7 @@ export class UpdateService implements OnDestroy {
           if (state) {
             this.updateState.set(state);
           }
-        }
+        },
       });
     } catch (e) {
       console.error('Failed to get initial update state:', e);
@@ -56,6 +58,10 @@ export class UpdateService implements OnDestroy {
 
   public closeWindow(): void {
     this.electronService.closeUpdateWindow().subscribe();
+  }
+
+  public cancelPostUpdateAction(): void {
+    this.electronService.cancelPostUpdateAction().subscribe();
   }
 
   ngOnDestroy(): void {

@@ -1,0 +1,169 @@
+<div class="row align-items-center mb-4">
+  <div class="col">
+    <div class="d-flex align-items-center gap-2 mb-1">
+      <a routerLink="/dashboard" class="btn btn-outline-secondary btn-sm me-2">
+        <i class="bi bi-arrow-left"></i> Back
+      </a>
+      <h1 class="h3 mb-0"><i class="bi bi-gear-fill text-warning me-2"></i>Automation Settings</h1>
+    </div>
+    <p class="text-white-50 ms-5 ps-3">Control when the game update sequence runs and what happens once it finishes.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  @if (updateService.updateState().isUpdating) {
+    <div class="col-12 animate-fade">
+      <div class="alert alert-warning border border-warning d-flex align-items-center gap-2 shadow-sm mb-0 py-2">
+        <i class="bi bi-lock-fill fs-5"></i>
+        <span>Settings are locked because an update is currently in progress.</span>
+      </div>
+    </div>
+  }
+
+  <div class="col-12">
+    <fieldset [disabled]="updateService.updateState().isUpdating" class="border-0 p-0 m-0">
+      <div class="row g-4">
+        <!-- Update Start Behavior -->
+        <div class="col-12 col-lg-7">
+          <div class="card bg-dark border border-secondary shadow-sm mb-4">
+            <div class="card-header bg-dark border-secondary py-3">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-play-circle text-primary fs-4"></i>
+                <h2 class="h5 mb-0 fw-bold text-white">Update Start Behavior</h2>
+              </div>
+            </div>
+            <div class="card-body">
+              <!-- Manual -->
+              <div class="form-check mb-3">
+                <input
+                  class="form-check-input pointer"
+                  type="radio"
+                  name="updateMode"
+                  id="modeManual"
+                  [checked]="configService.configuration().mode === Mode.Manual"
+                  (change)="onModeChange(Mode.Manual)"
+                >
+                <label class="form-check-label fw-semibold pointer" for="modeManual">
+                  Manual
+                  <span class="d-block text-muted small fw-normal">You start updates yourself from the Dashboard.</span>
+                </label>
+              </div>
+
+              <!-- Auto -->
+              <div class="form-check mb-3">
+                <input
+                  class="form-check-input pointer"
+                  type="radio"
+                  name="updateMode"
+                  id="modeAuto"
+                  [checked]="configService.configuration().mode === Mode.Auto"
+                  (change)="onModeChange(Mode.Auto)"
+                >
+                <label class="form-check-label fw-semibold pointer" for="modeAuto">
+                  Start automatically on launch
+                  <span class="d-block text-muted small fw-normal">Shows a 10 second countdown (with a Cancel button) when the app starts, then begins the update.</span>
+                </label>
+              </div>
+
+              <!-- Scheduled -->
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input pointer"
+                  type="radio"
+                  name="updateMode"
+                  id="modeScheduled"
+                  [checked]="configService.configuration().mode === Mode.Scheduled"
+                  (change)="onModeChange(Mode.Scheduled)"
+                >
+                <label class="form-check-label fw-semibold pointer" for="modeScheduled">
+                  Run on a daily schedule
+                  <span class="d-block text-muted small fw-normal">Automatically starts an update at the same time every day.</span>
+                </label>
+              </div>
+
+              @if (configService.configuration().mode === Mode.Scheduled) {
+                <div class="ms-4 ps-3 mt-3">
+                  <label for="scheduledTimeInput" class="form-label text-white-50 small fw-bold">Daily update time</label>
+                  <input
+                    type="time"
+                    class="form-control form-control-sm bg-dark border-secondary text-white"
+                    style="max-width: 160px;"
+                    id="scheduledTimeInput"
+                    [ngModel]="configService.configuration().scheduledTime"
+                    (ngModelChange)="onScheduledTimeChange($event)"
+                  >
+                  <div class="form-text text-muted small">Time is based on this computer's local clock (24-hour format).</div>
+                </div>
+              }
+
+              <div class="form-text text-muted small mt-3 mb-0">
+                <i class="bi bi-info-circle me-1"></i>Automatic launch and daily schedule cannot be used at the same time.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- After Update Behavior -->
+        <div class="col-12 col-lg-5">
+          <div class="card bg-dark border border-secondary shadow-sm">
+            <div class="card-header bg-dark border-secondary py-3">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-power text-danger fs-4"></i>
+                <h2 class="h5 mb-0 fw-bold text-white">After Update Completes</h2>
+              </div>
+            </div>
+            <div class="card-body">
+              <!-- Do nothing -->
+              <div class="form-check mb-3">
+                <input
+                  class="form-check-input pointer"
+                  type="radio"
+                  name="afterUpdateAction"
+                  id="afterUpdateNone"
+                  [checked]="configService.configuration().afterUpdateAction === AfterUpdateAction.None"
+                  (change)="onAfterUpdateActionChange(AfterUpdateAction.None)"
+                >
+                <label class="form-check-label fw-semibold pointer" for="afterUpdateNone">
+                  Do nothing
+                  <span class="d-block text-muted small fw-normal">Leave Loadout running once the update finishes.</span>
+                </label>
+              </div>
+
+              <!-- Close app -->
+              <div class="form-check mb-3">
+                <input
+                  class="form-check-input pointer"
+                  type="radio"
+                  name="afterUpdateAction"
+                  id="afterUpdateExit"
+                  [checked]="configService.configuration().afterUpdateAction === AfterUpdateAction.Exit"
+                  (change)="onAfterUpdateActionChange(AfterUpdateAction.Exit)"
+                >
+                <label class="form-check-label fw-semibold pointer" for="afterUpdateExit">
+                  Close Loadout
+                  <span class="d-block text-muted small fw-normal">Useful for USB drives or kiosks that should shut themselves down once games are up to date.</span>
+                </label>
+              </div>
+
+              <!-- Shut down system -->
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input pointer"
+                  type="radio"
+                  name="afterUpdateAction"
+                  id="afterUpdateShutdown"
+                  [checked]="configService.configuration().afterUpdateAction === AfterUpdateAction.Shutdown"
+                  (change)="onAfterUpdateActionChange(AfterUpdateAction.Shutdown)"
+                >
+                <label class="form-check-label fw-semibold pointer" for="afterUpdateShutdown">
+                  Shut down the system
+                  <span class="d-block text-muted small fw-normal">Powers off the whole computer once the update finishes.</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+  </div>
+</div>

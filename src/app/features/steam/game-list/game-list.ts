@@ -1,10 +1,11 @@
 import { Component, TemplateRef, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NgbModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigurationService, SteamGame } from '../../../core/services/configuration-service';
 import { ElectronService } from '../../../core/services/electron.service';
 import { ToastService } from 'ngx-yet-another-toast-library';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog';
 
 @Component({
   selector: 'app-game-list',
@@ -29,7 +30,7 @@ export class GameList {
   protected readonly isLoadingDetails = signal<boolean>(false);
   protected readonly editingGame = signal<SteamGame | null>(null);
 
-  protected openGameModal(content: TemplateRef<any>, game: SteamGame | null = null): void {
+  protected openGameModal(content: TemplateRef<unknown>, game: SteamGame | null = null): void {
     this.isLoadingDetails.set(false);
 
     if (game) {
@@ -111,7 +112,7 @@ export class GameList {
     }
   }
 
-  protected async onSaveGame(modal: any): Promise<void> {
+  protected async onSaveGame(modal: NgbActiveModal): Promise<void> {
     const idVal = this.appIdSignal().trim();
     const nameVal = this.nameSignal().trim();
 
@@ -165,7 +166,14 @@ export class GameList {
   }
 
   protected async onDeleteGame(game: SteamGame): Promise<void> {
-    if (confirm(`Are you sure you want to remove the game "${game.name}" (ID ${game.appId})?`)) {
+    const modalRef = this.modalService.open(ConfirmDialogComponent, { centered: true, backdrop: 'static' });
+    modalRef.componentInstance.title.set('Remove Game');
+    modalRef.componentInstance.message.set(`Are you sure you want to remove the game "${game.name}" (ID ${game.appId})?`);
+    modalRef.componentInstance.confirmText.set('Remove');
+    modalRef.componentInstance.confirmStyle.set('btn-danger');
+
+    const confirmed = await modalRef.result;
+    if (confirmed) {
       const current = this.configService.configuration();
       current.steam.games = current.steam.games.filter(g => g.appId !== game.appId);
       this.configService.configuration.set({ ...current });

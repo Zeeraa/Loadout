@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
+import { Component, inject, effect, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UpdateService } from '../../core/services/update.service';
 
@@ -86,12 +86,16 @@ export class UpdateStatus implements AfterViewChecked {
     this.updateService.closeWindow();
   }
 
+  protected onCancelPostUpdateAction(): void {
+    this.updateService.cancelPostUpdateAction();
+  }
+
   private scrollToBottom(): void {
     try {
       if (this.logWindow) {
         this.logWindow.nativeElement.scrollTop = this.logWindow.nativeElement.scrollHeight;
       }
-    } catch (err) {
+    } catch (_err) {
       // Ignore
     }
   }

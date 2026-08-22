@@ -31,7 +31,7 @@ export class Notifications {
     await this.configService.saveConfiguration();
     this.toastService.success(
       `Discord Webhook notifications have been ${enabled ? 'enabled' : 'disabled'}.`,
-      'Config Saved'
+      'Config Saved',
     );
   }
 

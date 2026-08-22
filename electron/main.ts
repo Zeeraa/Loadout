@@ -1,11 +1,9 @@
-import { app, BrowserWindow, dialog, } from 'electron';
+import { app, dialog } from 'electron';
 import * as fs from 'fs';
 import { Loadout } from './Loadout';
 import { getPlatform, Platform } from './Utils';
 
 const isDev = !app.isPackaged;
-
-let loadout: Loadout | null = null;
 
 if (isDev) {
   // Watch compiled output dir for changes from tsc --watch.
@@ -27,13 +25,7 @@ app.whenReady().then(() => {
     return;
   }
 
-  loadout = new Loadout();
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      loadout = new Loadout();
-    }
-  });
+  new Loadout();
 });
 
 app.on('window-all-closed', () => {

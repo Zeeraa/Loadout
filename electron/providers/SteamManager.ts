@@ -150,7 +150,7 @@ export class SteamManager {
     return new Promise<void>((resolve, reject) => {
       if (platform === Platform.Windows) {
         // Construct a single command sequence for all accounts in one window
-        let commandParts: string[] = [`Set-Location -Path '${this.steamCmdFolderPath}'`];
+        const commandParts: string[] = [`Set-Location -Path '${this.steamCmdFolderPath}'`];
         for (const account of activeAccounts) {
           const escapedUser = account.username.replace(/'/g, "''");
           const escapedPass = account.password.replace(/'/g, "''");
@@ -177,7 +177,7 @@ export class SteamManager {
         resolve();
       } else if (platform === Platform.Linux) {
         // Multi-account bash inner command chain
-        let scriptParts: string[] = [`cd "${this.steamCmdFolderPath}"`];
+        const scriptParts: string[] = [`cd "${this.steamCmdFolderPath}"`];
         for (const account of activeAccounts) {
           const escapedUser = account.username.replace(/'/g, "'\\''");
           const escapedPass = account.password.replace(/'/g, "'\\''");
@@ -211,7 +211,7 @@ export class SteamManager {
       { cmd: 'konsole', args: (cmd: string) => ['-e', 'bash', '-c', cmd] },
       { cmd: 'xfce4-terminal', args: (cmd: string) => ['-e', `bash -c "${cmd.replace(/"/g, '\\"')}"`] },
       { cmd: 'lxterminal', args: (cmd: string) => ['-e', 'bash', '-c', cmd] },
-      { cmd: 'xterm', args: (cmd: string) => ['-e', 'bash', '-c', cmd] }
+      { cmd: 'xterm', args: (cmd: string) => ['-e', 'bash', '-c', cmd] },
     ];
 
     for (const term of terminalCommands) {
@@ -226,7 +226,7 @@ export class SteamManager {
         console.log(`Running Unix terminal: ${runCmd}`);
         exec(runCmd);
         return;
-      } catch (e) {
+      } catch {
         // Move to next terminal
       }
     }
@@ -372,7 +372,7 @@ export class SteamManager {
           console.error(`[SteamCMD Precheck Error] Login test timed out.`);
           try {
             testChild.kill('SIGKILL');
-          } catch (e) {}
+          } catch {}
           this.activeProcess = null;
           resolve(false);
         }
@@ -397,7 +397,7 @@ export class SteamManager {
             this.loadout.updateManager.addLog(`[SteamCMD Precheck Error] Steam Guard prompt detected! Interactive 2FA input is not supported in automated updater loops. Please login manually first in a standard terminal window.`);
             try {
               testChild.kill('SIGKILL');
-            } catch (e) {}
+            } catch (_e) {}
             this.activeProcess = null;
             resolve(false);
           }
@@ -485,7 +485,7 @@ export class SteamManager {
           await this.loadout.discordManager.sendSteamGameUpdateFailedNotification(
             game.appId,
             game.name,
-            `SteamCMD exited with non-zero status code: ${code}`
+            `SteamCMD exited with non-zero status code: ${code}`,
           );
           resolve(false);
         }
@@ -498,7 +498,7 @@ export class SteamManager {
         await this.loadout.discordManager.sendSteamGameUpdateFailedNotification(
           game.appId,
           game.name,
-          `Failed to spawn SteamCMD executable: ${String(err)}`
+          `Failed to spawn SteamCMD executable: ${String(err)}`,
         );
         resolve(false);
       });

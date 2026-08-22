@@ -1,10 +1,11 @@
 import { Component, TemplateRef, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NgbModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigurationService, SteamAccount } from '../../../core/services/configuration-service';
 import { ToastService } from 'ngx-yet-another-toast-library';
 import { ElectronService } from '../../../core/services/electron.service';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog';
 
 @Component({
   selector: 'app-account-list',
@@ -24,7 +25,7 @@ export class AccountList {
   protected readonly enabled = signal<boolean>(true);
   protected readonly editingAccount = signal<SteamAccount | null>(null);
 
-  protected openAccountModal(content: TemplateRef<any>, account: SteamAccount | null = null): void {
+  protected openAccountModal(content: TemplateRef<unknown>, account: SteamAccount | null = null): void {
     if (account) {
       this.editingAccount.set(account);
       this.username.set(account.username);
@@ -40,7 +41,7 @@ export class AccountList {
     this.modalService.open(content, { centered: true, backdrop: 'static' });
   }
 
-  protected async onSaveAccount(modal: any): Promise<void> {
+  protected async onSaveAccount(modal: NgbActiveModal): Promise<void> {
     const userVal = this.username().trim();
     const passVal = this.password().trim();
 
@@ -85,7 +86,14 @@ export class AccountList {
   }
 
   protected async onDeleteAccount(account: SteamAccount): Promise<void> {
-    if (confirm(`Are you sure you want to remove the Steam account "${account.username}"?`)) {
+    const modalRef = this.modalService.open(ConfirmDialogComponent, { centered: true, backdrop: 'static' });
+    modalRef.componentInstance.title.set('Remove Account');
+    modalRef.componentInstance.message.set(`Are you sure you want to remove the Steam account "${account.username}"?`);
+    modalRef.componentInstance.confirmText.set('Remove');
+    modalRef.componentInstance.confirmStyle.set('btn-danger');
+
+    const confirmed = await modalRef.result;
+    if (confirmed) {
       const current = this.configService.configuration();
       current.steam.accounts = current.steam.accounts.filter(acc => acc.uuid !== account.uuid);
       this.configService.configuration.set({ ...current });

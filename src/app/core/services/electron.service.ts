@@ -20,14 +20,33 @@ export interface UpdateState {
   } | null;
   logs: string[];
   isCancelled: boolean;
+  pendingPostUpdateAction: 'exit' | 'shutdown' | null;
+  pendingPostUpdateSecondsRemaining: number;
+}
+
+interface ElectronApi {
+  ping(): Promise<string>;
+  selectDirectory(): Promise<string | null>;
+  fetchSteamGame(appId: string | number): Promise<SteamGameFetchResult>;
+  loadConfig(): Promise<Configuration | null>;
+  saveConfig(config: Configuration): Promise<boolean>;
+  testDiscordNotification(): Promise<unknown>;
+  testSteamLogin(): Promise<{ success: boolean; error?: string }>;
+  startFullUpdate(): Promise<boolean>;
+  cancelUpdate(): Promise<boolean>;
+  forceKillUpdate(): Promise<boolean>;
+  getUpdateState(): Promise<UpdateState>;
+  closeUpdateWindow(): Promise<boolean>;
+  cancelPostUpdateAction(): Promise<boolean>;
+  onUpdateStateChanged(callback: (state: UpdateState) => void): () => void;
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ElectronService {
-  private get api() {
-    return (window as any).api;
+  private get api(): ElectronApi {
+    return (window as unknown as { api: ElectronApi }).api;
   }
 
   public ping(): Observable<string> {
@@ -50,8 +69,8 @@ export class ElectronService {
     return from(this.api.saveConfig(config) as Promise<boolean>);
   }
 
-  public testDiscordNotification(): Observable<any> {
-    return from(this.api.testDiscordNotification() as Promise<any>);
+  public testDiscordNotification(): Observable<unknown> {
+    return from(this.api.testDiscordNotification());
   }
 
   public testSteamLogin(): Observable<{ success: boolean; error?: string }> {
@@ -76,6 +95,10 @@ export class ElectronService {
 
   public closeUpdateWindow(): Observable<boolean> {
     return from(this.api.closeUpdateWindow() as Promise<boolean>);
+  }
+
+  public cancelPostUpdateAction(): Observable<boolean> {
+    return from(this.api.cancelPostUpdateAction() as Promise<boolean>);
   }
 
   public onUpdateStateChanged(callback: (state: UpdateState) => void): () => void {

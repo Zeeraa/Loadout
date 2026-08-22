@@ -1,5 +1,4 @@
 import { ipcMain } from 'electron';
-import axios from 'axios';
 import { Loadout } from '../Loadout';
 import { WebhookClient } from 'discord.js';
 import { DiscordNotifyEvents } from '../config/ConfigurationManager';
@@ -30,7 +29,7 @@ export class DiscordManager {
     description: string,
     fields: { name: string; value: string; inline?: boolean }[] = [],
     color: number = 11488426, // Amber Gold/Orange (0xAF2A2A equivalent or blurish)
-    imageUrl?: string
+    imageUrl?: string,
   ): Promise<boolean> {
     const config = this.loadout.configurationManager.getConfig();
     if (!config.discord.enabled || !config.discord.notificationEvents || !config.discord.notificationEvents.includes(event)) {
@@ -52,9 +51,9 @@ export class DiscordManager {
             color,
             fields,
             image: imageUrl ? { url: imageUrl } : undefined,
-            timestamp: new Date().toISOString()
-          }
-        ]
+            timestamp: new Date().toISOString(),
+          },
+        ],
       });
       return true;
     } catch (error) {
@@ -69,7 +68,7 @@ export class DiscordManager {
       'Update started',
       `Checking and updating **${totalGames}** game${totalGames === 1 ? '' : 's'} on the schedule.`,
       [],
-      3447003 // Dark Blue (0x3498DB)
+      3447003, // Dark Blue (0x3498DB)
     );
   }
 
@@ -81,9 +80,9 @@ export class DiscordManager {
       [
         { name: 'Total Games', value: String(totalGames), inline: true },
         { name: 'Successful', value: String(successCount), inline: true },
-        { name: 'Failed', value: String(failCount), inline: true }
+        { name: 'Failed', value: String(failCount), inline: true },
       ],
-      2067276 // Dark Green (0x1F8B4C)
+      2067276, // Dark Green (0x1F8B4C)
     );
   }
 
@@ -95,10 +94,10 @@ export class DiscordManager {
       `Installation or file verification checklist has started for **${gameName}** (App ID: ${appId}).`,
       [
         { name: 'Game Title', value: gameName, inline: true },
-        { name: 'Application ID', value: String(appId), inline: true }
+        { name: 'Application ID', value: String(appId), inline: true },
       ],
       15105570, // Orange (0xE67E22)
-      headerUrl
+      headerUrl,
     );
   }
 
@@ -110,10 +109,10 @@ export class DiscordManager {
       `Finished checking and fetching updates for **${gameName}** (App ID: ${appId}). Files are verified and updated on the local storage loop.`,
       [
         { name: 'Game Title', value: gameName, inline: true },
-        { name: 'Application ID', value: String(appId), inline: true }
+        { name: 'Application ID', value: String(appId), inline: true },
       ],
       3066993, // Green/Teal (0x2ECC71)
-      headerUrl
+      headerUrl,
     );
   }
 
@@ -126,10 +125,10 @@ export class DiscordManager {
       [
         { name: 'Game Title', value: gameName, inline: true },
         { name: 'Application ID', value: String(appId), inline: true },
-        { name: 'Error Reason', value: errorReason, inline: false }
+        { name: 'Error Reason', value: errorReason, inline: false },
       ],
       15158332, // Red (0xE74C3C)
-      headerUrl
+      headerUrl,
     );
   }
 
@@ -149,21 +148,9 @@ export class DiscordManager {
               title: 'Connection Test Successful!',
               description: 'Your Loadout notification systems have successfully integrated with this Discord webhook. Future system loops, game updates, and startup/shutdown triggers will appear here.',
               color: 16750144, // Theme amber/orange (0xFF9440)
-              fields: [
-                {
-                  name: 'System Status',
-                  value: 'Connected & Verified',
-                  inline: true
-                },
-                {
-                  name: 'Action Trigger',
-                  value: 'Manual Test Request',
-                  inline: true
-                }
-              ],
-              timestamp: new Date().toISOString()
-            }
-          ]
+              timestamp: new Date().toISOString(),
+            },
+          ],
         });
 
         console.log('Discord test notification sent successfully!');

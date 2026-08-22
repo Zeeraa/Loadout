@@ -33,6 +33,8 @@ export interface Configuration {
   mode: Mode;
   afterUpdateAction: AfterUpdateAction;
   keepUpdateUiOpen: boolean;
+  /** Time of day (HH:mm, 24h) the update should run when mode is Scheduled */
+  scheduledTime: string;
 }
 
 export enum Mode {
@@ -55,6 +57,9 @@ export enum AfterUpdateAction {
 
   /** Reboot the system after the update process is complete */
   Reboot = 'reboot',
+
+  /** Shut down the system after the update process is complete */
+  Shutdown = 'shutdown',
 }
 
 /**
@@ -91,6 +96,7 @@ export function blankConfiguration(): Configuration {
     mode: Mode.Manual,
     afterUpdateAction: AfterUpdateAction.None,
     keepUpdateUiOpen: true,
+    scheduledTime: '03:00',
   };
 }
 
@@ -112,7 +118,7 @@ export class ConfigurationManager {
     if (fs.existsSync(this.configPath)) {
       try {
         const content = fs.readFileSync(this.configPath, 'utf-8');
-        this.currentConfig = JSON.parse(content);
+        this.currentConfig = this.normalizeConfig(JSON.parse(content));
         console.log('Configuration successfully loaded from startup:', this.configPath);
       } catch (e) {
         console.error('Failed to parse config file on startup', e);
@@ -124,6 +130,23 @@ export class ConfigurationManager {
     }
   }
 
+  /** Fills in any fields missing from an older config.json with defaults so new settings don't come back as undefined. */
+  private normalizeConfig(parsed: Partial<Configuration> | null | undefined): Configuration {
+    const blank = blankConfiguration();
+    if (!parsed) {
+      return blank;
+    }
+
+    return {
+      discord: { ...blank.discord, ...parsed.discord },
+      steam: { ...blank.steam, ...parsed.steam },
+      mode: parsed.mode ?? blank.mode,
+      afterUpdateAction: parsed.afterUpdateAction ?? blank.afterUpdateAction,
+      keepUpdateUiOpen: parsed.keepUpdateUiOpen ?? blank.keepUpdateUiOpen,
+      scheduledTime: parsed.scheduledTime ?? blank.scheduledTime,
+    };
+  }
+
   public getConfig(): Configuration {
     return this.currentConfig;
   }
@@ -133,11 +156,11 @@ export class ConfigurationManager {
       return this.currentConfig;
     });
 
-    ipcMain.handle('save-config', async (_, config: any) => {
+    ipcMain.handle('save-config', async (_, config: Configuration) => {
       try {
-        this.currentConfig = config;
+        this.currentConfig = this.normalizeConfig(config);
         fs.mkdirSync(path.dirname(this.configPath), { recursive: true });
-        fs.writeFileSync(this.configPath, JSON.stringify(config, null, 2), 'utf-8');
+        fs.writeFileSync(this.configPath, JSON.stringify(this.currentConfig, null, 2), 'utf-8');
         console.log('Configuration successfully saved to:', this.configPath);
         return true;
       } catch (e) {

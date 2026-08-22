@@ -34,10 +34,21 @@ export class Loadout {
 
     if (isDev) {
       this.window.loadURL('http://localhost:4200');
-      this.window.webContents.openDevTools();
     } else {
       this.window.loadFile(path.join(__dirname, '..', 'angular', 'browser', 'index.html'));
     }
+
+    // Allow pressing F12 to open search / developer tools console
+    this.window.webContents.on('before-input-event', (event, input) => {
+      if (input.type === 'keyDown' && input.key === 'F12') {
+        if (this.window.webContents.isDevToolsOpened()) {
+          this.window.webContents.closeDevTools();
+        } else {
+          this.window.webContents.openDevTools();
+        }
+        event.preventDefault();
+      }
+    });
 
     this.window.on('closed', () => {
       app.exit(0);
