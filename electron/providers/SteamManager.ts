@@ -2,7 +2,7 @@ import { ipcMain } from 'electron';
 import axios from 'axios';
 import { Loadout } from '../Loadout';
 import { SteamGame } from '../config/ConfigurationManager';
-import { getExecutableDirectory, getPlatform, Platform, SteamCMDDownloads } from '../Utils';
+import { getDataDirectory, getPlatform, Platform, SteamCMDDownloads } from '../Utils';
 import path from 'node:path';
 import { existsSync, mkdirSync, rmSync, writeFileSync, symlinkSync, unlinkSync, rmdirSync, lstatSync } from 'node:fs';
 import { exec, execSync, spawn } from 'node:child_process';
@@ -15,7 +15,7 @@ export class SteamManager {
   constructor(loadout: Loadout) {
     this.loadout = loadout;
     this.registerIpcHandlers();
-    this.steamCmdFolderPath = path.join(getExecutableDirectory(), 'steamcmd');
+    this.steamCmdFolderPath = path.join(getDataDirectory(), 'steamcmd');
 
     if(!existsSync(this.steamCmdFolderPath)) {
       mkdirSync(this.steamCmdFolderPath, { recursive: true });

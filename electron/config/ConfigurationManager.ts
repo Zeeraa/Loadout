@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { ipcMain } from 'electron';
 import { Loadout } from '../Loadout';
-import { getExecutableDirectory } from '../Utils';
+import { getDataDirectory } from '../Utils';
 
 export interface SteamAccount {
   uuid: string;
@@ -107,7 +107,7 @@ export class ConfigurationManager {
 
   constructor(loadout: Loadout) {
     this.loadout = loadout;
-    this.configPath = path.join(getExecutableDirectory(), 'config.json');
+    this.configPath = path.join(getDataDirectory(), 'config.json');
 
     this.currentConfig = blankConfiguration();
     this.loadOnStartup();
